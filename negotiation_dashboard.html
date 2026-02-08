@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMO Negotiation Dashboard - Buyer (Streamers Inc.)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #90a4ae;
+            margin-bottom: 30px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1000px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel h2 {
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0bec5;
+            font-size: 0.9rem;
+        }
+
+        .form-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #263238;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .form-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #263238;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.85rem;
+        }
+
+        .current-value {
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .payment-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .payment-item label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .payment-item input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #1a1a2e;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .payment-remaining {
+            grid-column: span 2;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .payment-valid {
+            background: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+
+        .payment-invalid {
+            background: rgba(244, 67, 54, 0.2);
+            color: #e57373;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .result-item.highlight {
+            background: rgba(79, 195, 247, 0.15);
+            border: 1px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .result-label {
+            color: #90a4ae;
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .result-value.positive {
+            color: #81c784;
+        }
+
+        .result-value.negative {
+            color: #e57373;
+        }
+
+        .comparison-bar {
+            margin-top: 30px;
+        }
+
+        .bar-container {
+            position: relative;
+            height: 60px;
+            background: #263238;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: visible;
+        }
+
+        .bar-zone {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .zone-walk {
+            background: rgba(244, 67, 54, 0.4);
+            border-radius: 8px 0 0 8px;
+        }
+
+        .zone-deal {
+            background: rgba(255, 193, 7, 0.4);
+        }
+
+        .zone-target {
+            background: rgba(76, 175, 80, 0.4);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .marker {
+            position: absolute;
+            top: -8px;
+            width: 4px;
+            height: 76px;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .marker-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .marker-batna {
+            background: #e57373;
+        }
+
+        .marker-batna .marker-label {
+            background: #e57373;
+            color: #1a1a2e;
+        }
+
+        .marker-current {
+            background: #4fc3f7;
+            width: 6px;
+        }
+
+        .marker-current .marker-label {
+            background: #4fc3f7;
+            color: #1a1a2e;
+        }
+
+        .marker-max {
+            background: #81c784;
+        }
+
+        .marker-max .marker-label {
+            background: #81c784;
+            color: #1a1a2e;
+        }
+
+        .bar-legend {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #90a4ae;
+        }
+
+        .targets-panel {
+            margin-bottom: 20px;
+        }
+
+        .target-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .target-input {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .target-input.anchor {
+            border-left: 3px solid #81c784;
+        }
+
+        .target-input.reservation {
+            border-left: 3px solid #e57373;
+        }
+
+        .target-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .target-input input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .status-indicator {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-excellent {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #81c784;
+            color: #81c784;
+        }
+
+        .status-good {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+        }
+
+        .status-poor {
+            background: rgba(255, 152, 0, 0.3);
+            border: 1px solid #ff9800;
+            color: #ff9800;
+        }
+
+        .status-walk {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #e57373;
+            color: #e57373;
+        }
+
+        .info-box {
+            background: rgba(79, 195, 247, 0.1);
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+
+        .info-box h4 {
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+
+        .savings-detail {
+            font-size: 0.85rem;
+            color: #90a4ae;
+            margin-top: 10px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1000px) {
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+
+        .secret-society-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(156, 39, 176, 0.15);
+            border: 2px solid rgba(156, 39, 176, 0.4);
+            border-radius: 8px;
+        }
+
+        .secret-society-panel h4 {
+            color: #ce93d8;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .ss-value-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        .ss-metric {
+            text-align: center;
+        }
+
+        .ss-metric-label {
+            font-size: 0.75rem;
+            color: #b0bec5;
+            display: block;
+        }
+
+        .ss-metric-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ce93d8;
+        }
+
+        .ss-metric-value.positive {
+            color: #81c784;
+        }
+
+        .ss-metric-value.negative {
+            color: #e57373;
+        }
+
+        .lever-tip {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 193, 7, 0.15);
+            border-left: 3px solid #ffc107;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.8rem;
+            color: #ffd54f;
+        }
+
+        .lever-tip strong {
+            color: #ffc107;
+        }
+
+        .trade-scenario {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .trade-scenario h5 {
+            color: #81c784;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CMO Negotiation Dashboard</h1>
+        <p class="subtitle">Buyer: Kara Tyler, Streamers Inc. | Show: Chief Mom Officer (100 episodes)</p>
+
+        <div class="dashboard">
+            <!-- Left Column: Inputs -->
+            <div class="panel">
+                <h2>Agreement Terms</h2>
+
+                <div class="form-group">
+                    <label>Licensing Fee per Episode</label>
+                    <input type="range" id="licensingFee" min="30000" max="60000" step="1000" value="45000">
+                    <div class="value-display">
+                        <span>$30,000 (min)</span>
+                        <span class="current-value" id="licensingFeeValue">$45,000</span>
+                        <span>$60,000 (max)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Contract Length</label>
+                    <select id="contractLength">
+                        <option value="1">1 Year (-$800,000)</option>
+                        <option value="2" selected>2 Years (Standard)</option>
+                        <option value="3">3 Years (+$800,000)</option>
+                        <option value="4">4 Years (+$1,600,000)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Schedule (% of total - must equal 100%)</label>
+                    <div class="payment-grid">
+                        <div class="payment-item">
+                            <label>Up Front (0% savings)</label>
+                            <input type="number" id="pay0" value="50" min="0" max="100">
+                        </div>
+                        <div class="payment-item">
+                            <label>6 Months (10% savings)</label>
+                            <input type="number" id="pay6" value="25" min="0" max="100">
+                        </div>
+                        <div class="payment-item">
+                            <label>12 Months (20% savings)</label>
+                            <input type="number" id="pay12" value="25" min="0" max="100">
+                        </div>
+                        <div class="payment-item">
+                            <label>18 Months (30% savings)</label>
+                            <input type="number" id="pay18" value="0" min="0" max="100">
+                        </div>
+                        <div class="payment-item">
+                            <label>24 Months (40% savings)</label>
+                            <input type="number" id="pay24" value="0" min="0" max="100">
+                        </div>
+                        <div class="payment-item">
+                            <label>30 Months (50% savings)</label>
+                            <input type="number" id="pay30" value="0" min="0" max="100">
+                        </div>
+                        <div class="payment-remaining" id="paymentStatus">Total: 100%</div>
+                    </div>
+                </div>
+
+                <div class="secret-society-panel">
+                    <h4>The Secret Society - Negotiation Lever</h4>
+                    <p style="font-size: 0.8rem; color: #b0bec5; margin-bottom: 12px;">
+                        Horizon wants to sell this teen show. Max value to Streamers: <strong style="color: #ce93d8;">$20,000/episode</strong>.
+                        Any price below = positive value for you!
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="includeSecretSociety" style="width: 18px; height: 18px;">
+                            <span>Include The Secret Society in deal (100 episodes)</span>
+                        </label>
+                    </div>
+
+                    <div id="secretSocietyDetails" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>Negotiated Fee per Episode</label>
+                            <input type="range" id="secretSocietyFee" min="5000" max="25000" step="1000" value="15000">
+                            <div class="value-display">
+                                <span>$5,000</span>
+                                <span class="current-value" id="secretSocietyFeeValue">$15,000</span>
+                                <span>$25,000</span>
+                            </div>
+                        </div>
+
+                        <div class="ss-value-display">
+                            <div class="ss-metric">
+                                <span class="ss-metric-label">You Pay Horizon</span>
+                                <span class="ss-metric-value" id="ssPayment">$1,500,000</span>
+                            </div>
+                            <div class="ss-metric">
+                                <span class="ss-metric-label">Your Net Value</span>
+                                <span class="ss-metric-value positive" id="ssNetValue">+$500,000</span>
+                            </div>
+                        </div>
+
+                        <div class="lever-tip">
+                            <strong>Negotiation Lever:</strong> Offer to buy Secret Society to sweeten the deal for Horizon.
+                            In exchange, push for better CMO payment terms (delayed payments = more savings for you).
+                        </div>
+
+                        <div class="trade-scenario" id="tradeScenario">
+                            <h5>Suggested Trade</h5>
+                            <p id="tradeText">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Targets -->
+            <div class="panel">
+                <h2>Negotiation Targets</h2>
+
+                <div class="targets-panel">
+                    <div class="target-inputs">
+                        <div class="target-input anchor">
+                            <label>Target (High Anchor)</label>
+                            <input type="number" id="targetValue" value="4000000" step="100000">
+                            <small style="color: #81c784;">Aim for this outcome</small>
+                        </div>
+                        <div class="target-input reservation">
+                            <label>Reservation (Walk Away)</label>
+                            <input type="number" id="reservationValue" value="500000" step="100000">
+                            <small style="color: #e57373;">Below this, walk away</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Key Reference Points</h4>
+                    <p><strong>BATNA:</strong> $3,000,000 (alternative show deal)</p>
+                    <p><strong>Base Revenue:</strong> $8,400,000 (2-year expected value)</p>
+                    <p><strong>Max Revenue:</strong> $10,000,000 (4-year deal)</p>
+                    <p><strong>Min Licensing Fee:</strong> $3,000,000 (100 × $30,000)</p>
+                    <p><strong>Max Licensing Fee:</strong> $6,000,000 (100 × $60,000)</p>
+                </div>
+
+                <div class="info-box" style="background: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.3);">
+                    <h4 style="color: #ffc107;">Maximum Possible Outcome</h4>
+                    <p>4-year deal @ $30,000/ep, all payments at 30 months:</p>
+                    <p><strong>Net Value: $5,500,000</strong></p>
+                    <p style="font-size: 0.8rem; margin-top: 5px;">($10M revenue - $3M fee + $1.5M savings - $3M BATNA)</p>
+                    <p style="font-size: 0.8rem; margin-top: 8px; color: #ce93d8;">
+                        + Secret Society @ $5,000/ep = <strong>+$1,500,000</strong><br>
+                        <strong>Total Max: $7,000,000</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="panel full-width">
+                <h2>Deal Analysis</h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <span class="result-label">1. Expected Revenue (Base)</span>
+                            <span class="result-value">$8,400,000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Contract Length Adjustment</span>
+                            <span class="result-value" id="contractAdjustment">$0</span>
+                        </div>
+                        <div class="result-item highlight">
+                            <span class="result-label">Net Value of Show</span>
+                            <span class="result-value" id="netShowValue">$8,400,000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">2. Licensing Fee (100 episodes)</span>
+                            <span class="result-value" id="totalLicensingFee">$4,500,000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">3. Payment Savings</span>
+                            <span class="result-value positive" id="paymentSavings">$337,500</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">4. Net Licensing Fee</span>
+                            <span class="result-value" id="netLicensingFee">$4,162,500</span>
+                        </div>
+                    </div>
+
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <span class="result-label">5. Other Terms (Secret Society)</span>
+                            <span class="result-value" id="otherTerms">$0</span>
+                        </div>
+                        <div class="result-item highlight">
+                            <span class="result-label">6. Net Revenue</span>
+                            <span class="result-value" id="netRevenue">$4,237,500</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">7. BATNA (Alternative Deal)</span>
+                            <span class="result-value">$3,000,000</span>
+                        </div>
+                        <div class="result-item highlight" style="background: rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.5);">
+                            <span class="result-label" style="font-weight: bold;">8. NET VALUE OF AGREEMENT</span>
+                            <span class="result-value positive" id="netValue" style="font-size: 1.3rem;">$1,237,500</span>
+                        </div>
+
+                        <div class="savings-detail" id="savingsBreakdown">
+                            Payment savings breakdown will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-bar">
+                    <h3 style="margin-bottom: 15px; color: #90a4ae;">Value Comparison</h3>
+                    <div class="bar-legend">
+                        <span>Walk Away Zone</span>
+                        <span>Acceptable Zone</span>
+                        <span>Target Zone</span>
+                    </div>
+                    <div class="bar-container" id="comparisonBar">
+                        <!-- Zones and markers will be rendered by JS -->
+                    </div>
+                    <div class="bar-legend">
+                        <span>-$1M</span>
+                        <span>$0</span>
+                        <span>$4M</span>
+                        <span>$8M</span>
+                    </div>
+                </div>
+
+                <div class="status-indicator" id="dealStatus">
+                    Deal Status
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const licensingFeeSlider = document.getElementById('licensingFee');
+        const licensingFeeValue = document.getElementById('licensingFeeValue');
+        const contractLength = document.getElementById('contractLength');
+        const targetInput = document.getElementById('targetValue');
+        const reservationInput = document.getElementById('reservationValue');
+        const includeSecretSociety = document.getElementById('includeSecretSociety');
+        const secretSocietyFeeSlider = document.getElementById('secretSocietyFee');
+        const secretSocietyFeeValue = document.getElementById('secretSocietyFeeValue');
+        const secretSocietyDetails = document.getElementById('secretSocietyDetails');
+
+        // Payment inputs
+        const payInputs = {
+            0: document.getElementById('pay0'),
+            6: document.getElementById('pay6'),
+            12: document.getElementById('pay12'),
+            18: document.getElementById('pay18'),
+            24: document.getElementById('pay24'),
+            30: document.getElementById('pay30')
+        };
+
+        // Constants
+        const BASE_REVENUE = 8400000;
+        const BATNA = 3000000;
+        const EPISODES = 100;
+        const SECRET_SOCIETY_MAX_VALUE = 20000;
+        const SECRET_SOCIETY_EPISODES = 100;
+
+        const CONTRACT_ADJUSTMENTS = {
+            '1': -800000,
+            '2': 0,
+            '3': 800000,
+            '4': 1600000
+        };
+
+        const PAYMENT_SAVINGS_RATES = {
+            0: 0,
+            6: 0.10,
+            12: 0.20,
+            18: 0.30,
+            24: 0.40,
+            30: 0.50
+        };
+
+        function formatCurrency(amount) {
+            const sign = amount < 0 ? '-' : '';
+            return sign + '$' + Math.abs(amount).toLocaleString('en-US');
+        }
+
+        function calculateDeal() {
+            // Get values
+            const feePerEpisode = parseInt(licensingFeeSlider.value);
+            const years = contractLength.value;
+            const target = parseInt(targetInput.value) || 0;
+            const reservation = parseInt(reservationInput.value) || 0;
+
+            // Calculate payment percentages
+            let paymentPercentages = {};
+            let totalPercent = 0;
+            for (const [month, input] of Object.entries(payInputs)) {
+                const pct = parseFloat(input.value) || 0;
+                paymentPercentages[month] = pct / 100;
+                totalPercent += pct;
+            }
+
+            // Update payment status
+            const paymentStatus = document.getElementById('paymentStatus');
+            if (Math.abs(totalPercent - 100) < 0.01) {
+                paymentStatus.textContent = 'Total: 100% ✓';
+                paymentStatus.className = 'payment-remaining payment-valid';
+            } else {
+                paymentStatus.textContent = `Total: ${totalPercent}% (must be 100%)`;
+                paymentStatus.className = 'payment-remaining payment-invalid';
+            }
+
+            // Calculate values
+            const contractAdjustment = CONTRACT_ADJUSTMENTS[years];
+            const netShowValue = BASE_REVENUE + contractAdjustment;
+            const totalLicensingFee = feePerEpisode * EPISODES;
+
+            // Payment savings
+            let paymentSavings = 0;
+            let savingsBreakdown = [];
+            for (const [month, pct] of Object.entries(paymentPercentages)) {
+                const payment = totalLicensingFee * pct;
+                const savings = payment * PAYMENT_SAVINGS_RATES[month];
+                paymentSavings += savings;
+                if (pct > 0) {
+                    savingsBreakdown.push(`${month}mo: ${formatCurrency(payment)} × ${PAYMENT_SAVINGS_RATES[month]*100}% = ${formatCurrency(savings)}`);
+                }
+            }
+
+            const netLicensingFee = totalLicensingFee - paymentSavings;
+
+            // Secret Society calculation
+            let otherTermsValue = 0;
+            if (includeSecretSociety.checked) {
+                const ssFee = parseInt(secretSocietyFeeSlider.value);
+                // Value = (MaxValue - NegotiatedFee) × Episodes
+                otherTermsValue = (SECRET_SOCIETY_MAX_VALUE - ssFee) * SECRET_SOCIETY_EPISODES;
+            }
+
+            const netRevenue = netShowValue - netLicensingFee + otherTermsValue;
+            const netValue = netRevenue - BATNA;
+
+            // Update display
+            licensingFeeValue.textContent = formatCurrency(feePerEpisode);
+            document.getElementById('contractAdjustment').textContent = formatCurrency(contractAdjustment);
+            document.getElementById('netShowValue').textContent = formatCurrency(netShowValue);
+            document.getElementById('totalLicensingFee').textContent = formatCurrency(totalLicensingFee);
+            document.getElementById('paymentSavings').textContent = formatCurrency(paymentSavings);
+            document.getElementById('netLicensingFee').textContent = formatCurrency(netLicensingFee);
+            document.getElementById('otherTerms').textContent = formatCurrency(otherTermsValue);
+            document.getElementById('netRevenue').textContent = formatCurrency(netRevenue);
+
+            const netValueEl = document.getElementById('netValue');
+            netValueEl.textContent = formatCurrency(netValue);
+            netValueEl.className = 'result-value ' + (netValue >= 0 ? 'positive' : 'negative');
+
+            // Savings breakdown
+            document.getElementById('savingsBreakdown').innerHTML =
+                '<strong>Payment Savings Detail:</strong><br>' +
+                (savingsBreakdown.length > 0 ? savingsBreakdown.join('<br>') : 'No delayed payments');
+
+            // Update comparison bar
+            updateComparisonBar(netValue, target, reservation);
+
+            // Update status
+            updateDealStatus(netValue, target, reservation);
+        }
+
+        function updateComparisonBar(netValue, target, reservation) {
+            const barContainer = document.getElementById('comparisonBar');
+            const minVal = -1000000;
+            const maxVal = 8000000;
+            const range = maxVal - minVal;
+
+            function getPosition(value) {
+                return ((value - minVal) / range) * 100;
+            }
+
+            // Create zones
+            const reservationPos = getPosition(reservation);
+            const targetPos = getPosition(target);
+
+            let html = '';
+
+            // Walk away zone (below reservation)
+            html += `<div class="bar-zone zone-walk" style="left: 0; width: ${reservationPos}%;">Walk Away</div>`;
+
+            // Acceptable zone (between reservation and target)
+            html += `<div class="bar-zone zone-deal" style="left: ${reservationPos}%; width: ${targetPos - reservationPos}%;">Acceptable</div>`;
+
+            // Target zone (above target)
+            html += `<div class="bar-zone zone-target" style="left: ${targetPos}%; width: ${100 - targetPos}%;">Target</div>`;
+
+            // BATNA marker (at 0 since net value is relative to BATNA)
+            const batnaPos = getPosition(0);
+            html += `<div class="marker marker-batna" style="left: ${batnaPos}%;">
+                <span class="marker-label">BATNA ($0)</span>
+            </div>`;
+
+            // Current value marker
+            const currentPos = Math.max(0, Math.min(100, getPosition(netValue)));
+            html += `<div class="marker marker-current" style="left: ${currentPos}%;">
+                <span class="marker-label">Current: ${formatCurrency(netValue)}</span>
+            </div>`;
+
+            // Max possible markers
+            const maxCMOOnly = 5500000;
+            const maxWithSS = 7000000;
+            const maxCMOPos = getPosition(maxCMOOnly);
+            const maxSSPos = getPosition(maxWithSS);
+
+            html += `<div class="marker marker-max" style="left: ${maxCMOPos}%; background: #81c784;">
+                <span class="marker-label" style="background: #81c784;">Max CMO: $5.5M</span>
+            </div>`;
+            html += `<div class="marker" style="left: ${maxSSPos}%; background: #ce93d8;">
+                <span class="marker-label" style="background: #ce93d8; color: #1a1a2e;">+SS: $7M</span>
+            </div>`;
+
+            barContainer.innerHTML = html;
+        }
+
+        function updateDealStatus(netValue, target, reservation) {
+            const statusEl = document.getElementById('dealStatus');
+
+            if (netValue < 0) {
+                statusEl.textContent = '⛔ REJECT DEAL - Value below BATNA! Take the alternative show instead.';
+                statusEl.className = 'status-indicator status-walk';
+            } else if (netValue < reservation) {
+                statusEl.textContent = '⚠️ WALK AWAY - Below your reservation value. Push for better terms.';
+                statusEl.className = 'status-indicator status-walk';
+            } else if (netValue < target) {
+                statusEl.textContent = '✓ ACCEPTABLE - Above reservation but below target. Room for improvement.';
+                statusEl.className = 'status-indicator status-good';
+            } else {
+                statusEl.textContent = '🎯 EXCELLENT - At or above your target! Strong deal for Streamers.';
+                statusEl.className = 'status-indicator status-excellent';
+            }
+        }
+
+        // Event listeners
+        licensingFeeSlider.addEventListener('input', calculateDeal);
+        contractLength.addEventListener('change', calculateDeal);
+        targetInput.addEventListener('input', calculateDeal);
+        reservationInput.addEventListener('input', calculateDeal);
+
+        for (const input of Object.values(payInputs)) {
+            input.addEventListener('input', calculateDeal);
+        }
+
+        includeSecretSociety.addEventListener('change', function() {
+            secretSocietyDetails.style.display = this.checked ? 'block' : 'none';
+            updateSecretSociety();
+            calculateDeal();
+        });
+
+        secretSocietyFeeSlider.addEventListener('input', function() {
+            secretSocietyFeeValue.textContent = formatCurrency(parseInt(this.value));
+            updateSecretSociety();
+            calculateDeal();
+        });
+
+        function updateSecretSociety() {
+            const ssFee = parseInt(secretSocietyFeeSlider.value);
+            const ssPaymentTotal = ssFee * SECRET_SOCIETY_EPISODES;
+            const ssNetValue = (SECRET_SOCIETY_MAX_VALUE - ssFee) * SECRET_SOCIETY_EPISODES;
+
+            // Update display
+            document.getElementById('ssPayment').textContent = formatCurrency(ssPaymentTotal);
+
+            const ssNetValueEl = document.getElementById('ssNetValue');
+            if (ssNetValue > 0) {
+                ssNetValueEl.textContent = '+' + formatCurrency(ssNetValue);
+                ssNetValueEl.className = 'ss-metric-value positive';
+            } else if (ssNetValue < 0) {
+                ssNetValueEl.textContent = formatCurrency(ssNetValue);
+                ssNetValueEl.className = 'ss-metric-value negative';
+            } else {
+                ssNetValueEl.textContent = '$0';
+                ssNetValueEl.className = 'ss-metric-value';
+            }
+
+            // Calculate trade scenario
+            updateTradeScenario(ssFee, ssPaymentTotal, ssNetValue);
+        }
+
+        function updateTradeScenario(ssFee, ssPaymentTotal, ssNetValue) {
+            const tradeText = document.getElementById('tradeText');
+            const licensingFee = parseInt(licensingFeeSlider.value) * EPISODES;
+
+            // Calculate what % of CMO payment could be delayed if Horizon gets Secret Society revenue
+            // Horizon gets immediate cash from Secret Society, so they might accept delayed CMO payments
+            const potentialDelay = Math.min(ssPaymentTotal, licensingFee);
+            const delayPercent = Math.round((potentialDelay / licensingFee) * 100);
+
+            // Calculate savings if that amount was delayed to 30 months
+            const maxSavings = potentialDelay * 0.50;
+
+            let scenario = '';
+
+            if (ssFee <= SECRET_SOCIETY_MAX_VALUE) {
+                scenario = `<strong>Offer:</strong> "We'll buy Secret Society at ${formatCurrency(ssFee)}/ep (${formatCurrency(ssPaymentTotal)} total)
+                if you accept delayed payment terms on CMO."<br><br>
+                <strong>Your pitch:</strong> You're giving Horizon ${formatCurrency(ssPaymentTotal)} in immediate/near-term revenue.
+                Ask to delay ~${delayPercent}% of CMO payments to 24-30 months.<br><br>
+                <strong>Potential savings:</strong> Up to ${formatCurrency(maxSavings)} in payment savings,
+                while gaining ${formatCurrency(ssNetValue)} from Secret Society =
+                <strong style="color: #81c784;">${formatCurrency(maxSavings + ssNetValue)} total value</strong>`;
+            } else {
+                scenario = `<span style="color: #e57373;">At ${formatCurrency(ssFee)}/ep, you're overpaying by
+                ${formatCurrency(Math.abs(ssNetValue))}. Negotiate below $20,000/ep for positive value.</span>`;
+            }
+
+            tradeText.innerHTML = scenario;
+        }
+
+        // Initial calculation
+        updateSecretSociety();
+        calculateDeal();
+    </script>
+</body>
+</html>
